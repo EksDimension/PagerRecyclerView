@@ -1,0 +1,2 @@
+# PagingGridLayoutManager
+针对RecyclerView可支持横向的GridLayoutManager
