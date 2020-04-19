@@ -1,4 +1,4 @@
-package com.eks.pagingrecyclerview
+package com.eks.paginggridlayoutmanager
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

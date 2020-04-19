@@ -1,11 +1,11 @@
-package com.eks.pagingrecyclerview
+package com.eks.paginggridlayoutmanager
 
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.eks.pagingrecyclerview.paginglayoutmanager.PagerGridLayoutManager
-import com.eks.pagingrecyclerview.paginglayoutmanager.PagerGridLayoutManager.HORIZONTAL
-import com.eks.pagingrecyclerview.paginglayoutmanager.PagerGridSnapHelper
+import com.eks.paginggridlayoutmanager.layoutmanager.PagerGridLayoutManager
+import com.eks.paginggridlayoutmanager.layoutmanager.PagerGridLayoutManager.Companion.HORIZONTAL
+import com.eks.paginggridlayoutmanager.layoutmanager.PagerGridSnapHelper
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -45,11 +45,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initListener() {
-        pagerGridLayoutManager?.registerOnPageChangeCallback { position, positionOffset, positionOffsetPixels ->
-            Log.i(
-                "233",
-                "当前页码:$position 偏移量:$positionOffset 偏移百分比$positionOffsetPixels"
-            )
-        }
+        pagerGridLayoutManager?.registerOnPageChangeCallback (object :PagerGridLayoutManager.OnPageChangeCallback{
+            override fun onPageScrolled(
+                position: Int,
+                positionOffset: Float,
+                positionOffsetPixels: Int
+            ) {
+                Log.i(
+                    "233",
+                    "当前页码:$position 偏移百分比:$positionOffset 偏移量:$positionOffsetPixels"
+                )
+            }
+        })
     }
 }

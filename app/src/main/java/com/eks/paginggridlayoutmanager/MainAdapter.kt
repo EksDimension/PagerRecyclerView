@@ -1,4 +1,4 @@
-package com.eks.pagingrecyclerview
+package com.eks.paginggridlayoutmanager
 
 import android.view.LayoutInflater
 import android.view.View
