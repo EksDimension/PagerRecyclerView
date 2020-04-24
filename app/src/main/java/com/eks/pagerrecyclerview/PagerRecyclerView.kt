@@ -93,7 +93,7 @@ open class PagerRecyclerView @JvmOverloads constructor(
 //                downX = e.x
                 dragX = 0f
                 diffX = 0f
-                downCurrentPage()
+                refreshCurrentPage()
             }
         }
         return super.onInterceptTouchEvent(e)
@@ -163,9 +163,9 @@ open class PagerRecyclerView @JvmOverloads constructor(
     }*/
 
     /**
-     * 按下手指时页码
+     * 获取当前页码
      */
-    private fun downCurrentPage() {
+    private fun refreshCurrentPage() {
         // 获取第一个完全可视的位置
         val findFirstCompletelyVisibleItemPosition =
             gridLayoutManager.findFirstCompletelyVisibleItemPosition()
@@ -186,7 +186,7 @@ open class PagerRecyclerView @JvmOverloads constructor(
     private fun troggleTurning(flag: Int) {
         pagingHandler.removeCallbacksAndMessages(null)
         pagingHandler.postDelayed({
-            var position = 0
+            val position: Int
             when (flag) {
                 DRAGGING_LEFT_BACK -> {
                     position = getPositionByPage(currentPage - 1)
@@ -194,7 +194,7 @@ open class PagerRecyclerView @JvmOverloads constructor(
 //                    Log.i(TAG, "左翻页$position")
                 }
                 DRAGGING_RIGHT_NEXT -> {
-                    position = getPositionByPage(currentPage + 1) + (pageSize-1)
+                    position = getPositionByPage(currentPage + 1) + (pageSize - 1)
                     smoothScrollToPosition(position)
 //                    Log.i(TAG, "右翻页$position")
                 }
@@ -218,7 +218,8 @@ open class PagerRecyclerView @JvmOverloads constructor(
         super.onScrollStateChanged(state)
         when (state) {
             SCROLL_STATE_IDLE -> {
-                if ((lastState == SCROLL_STATE_SETTLING || lastState == SCROLL_STATE_DRAGGING) && lastState == SCROLL_STATE_IDLE) {
+                if ((lastState == SCROLL_STATE_SETTLING)) {
+                    refreshCurrentPage()
                     onPositionChangedListener?.onPositionChanged(currentPage)
                 }
             }
@@ -232,7 +233,7 @@ open class PagerRecyclerView @JvmOverloads constructor(
      * 初始化分页信息
      */
     private fun initPageCounts() {
-        if(pageSize==0){
+        if (pageSize == 0) {
             throw IllegalArgumentException("pageSize is not set yet. ensure that you have set pageSize before executing setAdatper(adapter)")
         }
         if (pageCount == 0) {
