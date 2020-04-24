@@ -1,2 +1,2 @@
-# PagingGridLayoutManager
-针对RecyclerView可支持横向的GridLayoutManager
+# PagerRecyclerView
+可支持横向分页滚动的RecyclerView
