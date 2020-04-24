@@ -1,4 +1,4 @@
-package com.eks.paginggridlayoutmanager
+package com.eks.pagerrecyclerview
 
 import android.content.Context
 
