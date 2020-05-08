@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import androidx.recyclerview.widget.GridLayoutManager
@@ -71,6 +72,11 @@ open class PagerRecyclerView @JvmOverloads constructor(
      */
     private var dragX = 0f
 
+    /**
+     * 总滚动值
+     */
+    private var scrolledX = 0
+
     private lateinit var gridLayoutManager: GridLayoutManager
 
     private var pagingHandler = Handler()
@@ -78,13 +84,14 @@ open class PagerRecyclerView @JvmOverloads constructor(
     private var onPositionChangedListener: OnPositionChangedListener? = null
 
     init {
-        scaledTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
+        scaledTouchSlop = ViewConfiguration.get(context).scaledTouchSlop * 5
 //        scaledTouchSlop = 0
     }
 
     override fun onScrolled(dx: Int, dy: Int) {
         super.onScrolled(dx, dy)
         dragX += dx
+        scrolledX += dx
     }
 
     override fun onInterceptTouchEvent(e: MotionEvent?): Boolean {
@@ -94,6 +101,7 @@ open class PagerRecyclerView @JvmOverloads constructor(
                 dragX = 0f
                 diffX = 0f
                 refreshCurrentPage()
+                pagingHandler.removeCallbacksAndMessages(null)
             }
         }
         return super.onInterceptTouchEvent(e)
@@ -129,6 +137,7 @@ open class PagerRecyclerView @JvmOverloads constructor(
                     if (abs(dragX) > scaledTouchSlop) {// 拉够了判定上一页
                         troggleTurning(DRAGGING_LEFT_BACK)
                     } else {// 拉不够判定复位
+                        e.action = MotionEvent.ACTION_CANCEL
                         troggleTurning(DRAGGING_RIGHT_RESET)
                     }
                 } else if (dragX > 0) {// 右滑
@@ -141,6 +150,7 @@ open class PagerRecyclerView @JvmOverloads constructor(
                     if (abs(dragX) > scaledTouchSlop) {// 拉够了判定下一页
                         troggleTurning(DRAGGING_RIGHT_NEXT)
                     } else {// 拉不够判定复位
+                        e.action = MotionEvent.ACTION_CANCEL
                         troggleTurning(DRAGGING_LEFT_RESET)
                     }
 //                    fling(0, 0)
@@ -189,7 +199,8 @@ open class PagerRecyclerView @JvmOverloads constructor(
             val position: Int
             when (flag) {
                 DRAGGING_LEFT_BACK -> {
-                    position = getPositionByPage(currentPage - 1)
+//                    position = getPositionByPage(currentPage - 1)
+                    position = getPositionByPage(currentPage)
                     smoothScrollToPosition(position)
 //                    Log.i(TAG, "左翻页$position")
                 }
@@ -203,10 +214,15 @@ open class PagerRecyclerView @JvmOverloads constructor(
                     onScrollStateChanged(SCROLL_STATE_IDLE)
 //                    Log.i(TAG, "复位$position")
                     needResetPosition = position
-                    gridLayoutManager.scrollToPositionWithOffset(needResetPosition, 0)
+//                    gridLayoutManager.scrollToPositionWithOffset(needResetPosition, 0)
+
+//                    val linearSmoothScroller = LinearSmoothScroller(context)
+//                    linearSmoothScroller.targetPosition = needResetPosition
+//                    gridLayoutManager.startSmoothScroll(linearSmoothScroller)
+                    smoothScrollBy(-dragX.toInt(), 0)
                 }
             }
-        }, DELAY_TIME)
+        }, DELAY_TIME_NORMAL)
     }
 
     override fun setLayoutManager(layout: LayoutManager?) {
@@ -218,13 +234,39 @@ open class PagerRecyclerView @JvmOverloads constructor(
         super.onScrollStateChanged(state)
         when (state) {
             SCROLL_STATE_IDLE -> {
-                if ((lastState == SCROLL_STATE_SETTLING)) {
+                if ((lastState == SCROLL_STATE_SETTLING) || (lastState == SCROLL_STATE_DRAGGING)) {
                     refreshCurrentPage()
-                    onPositionChangedListener?.onPositionChanged(currentPage)
+                    if (lastState == SCROLL_STATE_SETTLING) {
+                        onPositionChangedListener?.onPositionChanged(currentPage)
+                    }
+                    // 停下来后校正一下位置
+                    correctOffset()
                 }
             }
         }
         lastState = state
+    }
+
+    /**
+     * 判断下当前页码最前以为 是不是位于最前
+     */
+    private fun correctOffset() {
+        pagingHandler.removeCallbacksAndMessages(null)
+        pagingHandler.postDelayed({
+            var positionByPage = getPositionByPage(currentPage)
+            var findViewByPosition = gridLayoutManager.findViewByPosition(positionByPage)
+            if (findViewByPosition == null) {
+                positionByPage = getPositionByPage(currentPage + 1)
+                findViewByPosition = gridLayoutManager.findViewByPosition(positionByPage)
+            }
+            findViewByPosition?.let {
+                // 如果发现x不为0, 那就表示有有偏移了, 得校正下
+                if (it.x.toInt() != 0 && currentPage != pageCount - 1) {
+                    Log.i(TAG, "${it.x} ${it.scrollX} ${it.translationX}")
+                    smoothScrollBy(it.x.toInt(), 0)
+                }
+            }
+        }, DELAY_TIME_NONE)
     }
 
     private fun getPositionByPage(page: Int): Int = page * pageSize
@@ -295,7 +337,12 @@ open class PagerRecyclerView @JvmOverloads constructor(
         /**
          * 延迟触发时间
          */
-        const val DELAY_TIME = 100L
+        const val DELAY_TIME_NORMAL = 100L
+
+        /**
+         * 无延迟触发时间
+         */
+        const val DELAY_TIME_NONE = 0L
 
         val TAG = PagerRecyclerView::class.simpleName
     }

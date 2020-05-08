@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initData() {
         val dataList = ArrayList<String>()
-        for (i in 1..25) {
+        for (i in 1..55) {
             dataList.add("$i")
         }
         mainAdapter?.dataList = dataList
