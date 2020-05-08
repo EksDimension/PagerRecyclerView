@@ -86,6 +86,16 @@ open class PagerRecyclerView @JvmOverloads constructor(
     init {
         scaledTouchSlop = ViewConfiguration.get(context).scaledTouchSlop * 5
 //        scaledTouchSlop = 0
+        setMaxFlingVelocity()
+    }
+
+    /**
+     * 设置最大惯性
+     */
+    private fun setMaxFlingVelocity() {
+        val mMaxFlingVelocityField = RecyclerView::class.java.getDeclaredField("mMaxFlingVelocity")
+        mMaxFlingVelocityField.isAccessible = true
+        mMaxFlingVelocityField.set(this, 2000)
     }
 
     override fun onScrolled(dx: Int, dy: Int) {
@@ -262,7 +272,7 @@ open class PagerRecyclerView @JvmOverloads constructor(
             findViewByPosition?.let {
                 // 如果发现x不为0, 那就表示有有偏移了, 得校正下
                 if (it.x.toInt() != 0 && currentPage != pageCount - 1) {
-                    Log.i(TAG, "${it.x} ${it.scrollX} ${it.translationX}")
+//                    Log.i(TAG, "${it.x} ${it.scrollX} ${it.translationX}")
                     smoothScrollBy(it.x.toInt(), 0)
                 }
             }
